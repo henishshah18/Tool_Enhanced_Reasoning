@@ -1,166 +1,271 @@
 # Tool-Enhanced Reasoning Script
 
-A simple Python script that uses OpenAI's GPT-4.1-mini to interpret natural language queries, perform chain-of-thought reasoning, and call external tools when necessary to produce final answers. This implementation follows the [OpenAI Cookbook pattern](https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models) for function calling.
+A Python script that implements Chain-of-Thought (CoT) reasoning with sequential tool execution using OpenAI's GPT-4o-mini. The system breaks down natural language queries into logical steps, plans tool usage, and executes tools sequentially to produce accurate answers.
 
-## Features
+## 🎯 Project Overview
 
-- Chain-of-thought (CoT) style reasoning using OpenAI's GPT-4o-mini
-- Automatic tool detection and execution using OpenAI's function calling API
-- Mathematical operations (average, square root, addition, multiplication, comparison)
-- String operations (vowel counting, letter counting, word counting, number extraction, length comparison)
-- Retry logic for API calls with exponential backoff
-- Pretty-printed conversation debugging
+This project demonstrates a simple yet effective approach to tool-enhanced reasoning without using complex frameworks like LangChain. It follows the [OpenAI Cookbook pattern](https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models) for function calling with a custom CoT planning layer.
 
-## Installation
+## ✨ Features
 
-1. Clone this repository:
-```bash
-git clone <your-repo-url>
-cd Assignment4.3
-```
+- **Chain-of-Thought Reasoning**: LLM breaks down complex queries into logical steps
+- **Sequential Tool Execution**: Tools run one by one with result sharing
+- **Mathematical Operations**: Average, square root, addition, multiplication, comparison
+- **String Analysis**: Vowel counting, letter counting, word counting, number extraction
+- **Robust Error Handling**: Graceful handling of API failures and tool errors
+- **Clear Debugging**: Step-by-step execution visibility
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Set up your environment variables:
-   - Copy `env_example.txt` to `.env`
-   - Add your OpenAI API key to the `.env` file:
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-## Usage
-
-Run the main script:
-```bash
-python main.py
-```
-
-The script will process example queries and display:
-- The LLM's reasoning steps
-- Whether a tool was used
-- Tool results (if any)
-- The final answer
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
-├── main.py                 # Main reasoning script (OpenAI cookbook pattern)
-├── function_specs.py       # Function specifications for OpenAI API
+Assignment4.3/
+├── main.py                 # Main reasoning script with CoT + sequential execution
+├── function_specs.py       # OpenAI function specifications
 ├── tools/
 │   ├── __init__.py        # Package initialization
-│   ├── math_tools.py      # Mathematical operations
-│   └── string_tools.py    # String operations
+│   ├── math_tools.py      # Mathematical operations (implemented)
+│   └── string_tools.py    # String operations (implemented)
 ├── README.md              # This file
 ├── requirements.txt       # Python dependencies
 └── env_example.txt        # Environment setup instructions
 ```
 
-## Example Queries and Expected Output
+## 🚀 Installation & Setup
 
-### 1. Mathematical Query
+### 1. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd Assignment4.3
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Set Up Environment Variables
+1. Copy `env_example.txt` to `.env`:
+   ```bash
+   cp env_example.txt .env
+   ```
+
+2. Add your OpenAI API key to the `.env` file:
+   ```
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+   **Get your API key from**: [OpenAI Platform](https://platform.openai.com/api-keys)
+
+### 4. Run the Script
+```bash
+python main.py
+```
+
+## 📋 Example Queries and Outputs
+
+### 1. Mathematical Query: Square Root of Average
 **Query:** "What's the square root of the average of 18 and 50?"
 
-**Expected Output:**
-- Reasoning: "I need to find the average of 18 and 50 first, then take the square root of that result."
-- Tool Used: Multiple tools
-- Tool Results:
-  - calculate_average: 34.0
-  - calculate_square_root: 5.830951894845301
-- Final Answer: "The square root of the average of 18 and 50 is approximately 5.83"
+**Output:**
+```
+Step 1: Planning execution...
+Reasoning: First, I need to calculate the average of 18 and 50. Then, I will take the square root of that average.
+Planned tools: ['calculate_average', 'calculate_square_root']
 
-### 2. String Analysis Query
+Step 2: Executing tools...
+  Step 1: Executing calculate_average
+    Arguments: {'numbers': [18, 50]}
+    Result: 34.0
+  Step 2: Executing calculate_square_root
+    Arguments: {'number': 34}
+    Result: 5.830951894845301
+
+Final Answer: The square root of the average of 18 and 50 is approximately 5.83.
+```
+
+### 2. String Analysis: Vowel Counting
 **Query:** "How many vowels are in the word 'Multimodality'?"
 
-**Expected Output:**
-- Reasoning: "I need to count the vowels (a, e, i, o, u) in the word 'Multimodality'."
-- Tool Used: Single tool
-- Tool Results:
-  - count_vowels: 5
-- Final Answer: "There are 5 vowels in the word 'Multimodality'."
+**Output:**
+```
+Step 1: Planning execution...
+Reasoning: To determine the number of vowels in the word 'Multimodality', I will use the tool that specifically counts vowels in a given string.
+Planned tools: ['count_vowels']
 
-### 3. Comparison Query
+Step 2: Executing tools...
+  Step 1: Executing count_vowels
+    Arguments: {'text': 'Multimodality'}
+    Result: 5
+
+Final Answer: The word 'Multimodality' contains 5 vowels.
+```
+
+### 3. Complex Comparison: Letters vs Vowels
 **Query:** "Is the number of letters in 'machine' greater than the number of vowels in 'reasoning'?"
 
-**Expected Output:**
-- Reasoning: "I need to count letters in 'machine' and vowels in 'reasoning', then compare them."
-- Tool Used: Multiple tools
-- Tool Results:
-  - count_letters: 7
-  - count_vowels: 4
-  - compare_numbers: greater
-- Final Answer: "Yes, 'machine' has 7 letters which is greater than the 4 vowels in 'reasoning'."
+**Output:**
+```
+Step 1: Planning execution...
+Reasoning: 1. First, I need to count the number of letters in the word "machine."
+2. Next, I will count the number of vowels in the word "reasoning."
+3. Finally, I will compare the two results to determine if the number of letters in "machine" is greater than the number of vowels in "reasoning."
+Planned tools: ['count_letters', 'count_vowels', 'compare_numbers']
 
-### 4. Complex Mathematical Query
+Step 2: Executing tools...
+  Step 1: Executing count_letters
+    Arguments: {'text': 'machine'}
+    Result: 7
+  Step 2: Executing count_vowels
+    Arguments: {'text': 'reasoning'}
+    Result: 4
+  Step 3: Executing compare_numbers
+    Arguments: {'a': 7, 'b': 4}
+    Result: greater
+
+Final Answer: Yes, the number of letters in 'machine' is greater than the number of vowels in 'reasoning'.
+```
+
+### 4. Mathematical Operations: Addition and Division
 **Query:** "What is 15 plus 27 divided by 3?"
 
 **Expected Output:**
-- Reasoning: "I need to perform the division first (27/3 = 9), then add 15 to the result."
-- Tool Used: Multiple tools
-- Tool Results:
-  - add_numbers: 24
-- Final Answer: "15 plus 27 divided by 3 equals 24."
+```
+Step 1: Planning execution...
+Reasoning: I need to perform the division first (27/3 = 9), then add 15 to the result.
+Planned tools: ['add_numbers']
+
+Step 2: Executing tools...
+  Step 1: Executing add_numbers
+    Arguments: {'numbers': [15, 9]}
+    Result: 24
+
+Final Answer: 15 plus 27 divided by 3 equals 24.
+```
 
 ### 5. String Length Comparison
 **Query:** "Which word is longer: 'artificial' or 'intelligence'?"
 
 **Expected Output:**
-- Reasoning: "I need to count the letters in both words and compare their lengths."
-- Tool Used: Multiple tools
-- Tool Results:
-  - compare_string_lengths: longer
-- Final Answer: "'Intelligence' is longer with 12 letters compared to 'artificial' with 10 letters."
+```
+Step 1: Planning execution...
+Reasoning: I need to count the letters in both words and compare their lengths.
+Planned tools: ['compare_string_lengths']
 
-## How the Implementation Works
+Step 2: Executing tools...
+  Step 1: Executing compare_string_lengths
+    Arguments: {'text1': 'artificial', 'text2': 'intelligence'}
+    Result: shorter
 
-This implementation follows the [OpenAI Cookbook pattern](https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models) for function calling:
+Final Answer: 'Intelligence' is longer with 12 letters compared to 'artificial' with 10 letters.
+```
 
-### 1. Function Specifications (`function_specs.py`)
+## 🧠 How the CoT Prompt Helps Decide Tool Usage
+
+The system uses a structured Chain-of-Thought approach with three distinct phases:
+
+### **Phase 1: Planning (CoT Reasoning)**
+The LLM receives a structured prompt that instructs it to:
+1. **Think step by step** about the problem
+2. **Identify required operations** (mathematical, string analysis, etc.)
+3. **Plan tool sequence** in logical order
+4. **Output structured format**:
+   ```
+   REASONING: [Step-by-step analysis]
+   
+   TOOLS:
+   tool_name_1
+   tool_name_2
+   tool_name_3
+   ```
+
+### **Phase 2: Sequential Execution**
+The system executes tools one by one:
+1. **Extract clean tool names** from the plan
+2. **Call each tool individually** with proper arguments
+3. **Add results to conversation** for next tool
+4. **Handle errors gracefully** with fallback responses
+
+### **Phase 3: Final Answer Generation**
+The LLM combines:
+- Original reasoning
+- All tool results
+- Context from the query
+- Generates a comprehensive final answer
+
+## 🔧 Implementation Details
+
+### **Tool Specifications (`function_specs.py`)**
 - Defines all available tools in OpenAI's function specification format
 - Separates math and string tools for modularity
 - Provides clear descriptions and parameter requirements
 
-### 2. Tool Execution (`main.py`)
-- Uses OpenAI's `tools` parameter to provide function specifications
-- Implements the 4-step process:
-  1. **Initial Request**: Send query with tools available
-  2. **Tool Detection**: Check if model wants to call tools
-  3. **Tool Execution**: Execute tools with model-generated arguments
-  4. **Final Response**: Get final answer from model with tool results
+### **Sequential Execution (`main.py`)**
+- Implements the 3-phase process: Plan → Execute → Answer
+- Uses fresh conversation context for each tool call
+- Maintains proper message flow for OpenAI API
 
-### 3. Error Handling
-- Retry logic with exponential backoff for API calls
-- Graceful error handling for tool execution
-- Clear error messages for debugging
+### **Tool Implementation (`tools/`)**
+- **Math Tools**: `calculate_average`, `calculate_square_root`, `add_numbers`, `multiply_numbers`, `compare_numbers`
+- **String Tools**: `count_vowels`, `count_letters`, `count_words`, `extract_numbers`, `compare_string_lengths`
+- All tools are fully implemented with proper error handling
 
-## Implementation Notes
+## 🛠️ Dependencies
 
-- **OpenAI Function Calling**: Uses OpenAI's native function calling API instead of manual parsing
-- **Retry Logic**: Implements robust retry mechanism for API calls
-- **Modular Design**: Tools are implemented as simple Python functions
-- **Type Safety**: Proper type hints throughout the codebase
-- **Debugging Support**: Pretty-printed conversation output for development
+- `openai>=1.0.0`: OpenAI API client
+- `python-dotenv>=1.0.0`: Environment variable management
 
-## API Key Setup
+## 🔑 API Key Setup
 
-1. Get your OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Create a `.env` file in the project root
-3. Add your API key: `OPENAI_API_KEY=your_key_here`
+1. **Get your OpenAI API key** from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. **Create a `.env` file** in the project root
+3. **Add your API key**: `OPENAI_API_KEY=your_key_here`
 
-## Dependencies
+## 🚀 Usage Examples
 
-- `openai`: OpenAI API client
-- `python-dotenv`: Environment variable management
-- `tenacity`: Retry logic for API calls
-- `termcolor`: Colored output for debugging
+### Basic Usage
+```bash
+python main.py
+```
 
-## Contributing
+### Custom Queries
+You can modify the `test_queries` list in `main.py` to test different queries:
 
-This is a learning assignment. Feel free to extend the functionality by:
-- Adding more tools to `function_specs.py`
-- Improving the system prompt for better reasoning
-- Enhancing error handling and logging
-- Adding more complex query types
-- Implementing parallel tool calling for complex queries 
+```python
+test_queries = [
+    "What's the square root of the average of 18 and 50?",
+    "How many vowels are in the word 'Multimodality'?",
+    "Is the number of letters in 'machine' greater than the number of vowels in 'reasoning'?",
+    "What is 15 plus 27 divided by 3?",
+    "Which word is longer: 'artificial' or 'intelligence'?"
+]
+```
+
+## 🎯 Key Learning Outcomes
+
+This project demonstrates:
+- **Chain-of-Thought reasoning** without complex frameworks
+- **Sequential tool execution** with result sharing
+- **OpenAI function calling** best practices
+- **Error handling** and debugging techniques
+- **Modular tool design** for extensibility
+
+## 🔄 Extending the System
+
+You can easily extend the system by:
+1. **Adding new tools** to `function_specs.py` and `tools/` directory
+2. **Improving the planning prompt** for better reasoning
+3. **Adding more complex query types**
+4. **Implementing parallel tool calling** for independent operations
+
+## 📝 Contributing
+
+This is a learning assignment. Feel free to:
+- Add more tools and capabilities
+- Improve error handling and logging
+- Enhance the reasoning prompts
+- Add unit tests for tools
+- Implement more complex query types
+
+## 📄 License
+
+This project is for educational purposes. Feel free to use and modify as needed. 
